@@ -27,6 +27,7 @@ with open(yaml_conf, 'r') as f:
         print(yaml.dump(conf, default_flow_style=False))
 
 settings = conf.get('general')
+print('Grabbing all new tweets for user: {}'.format(settings['userid']))
 
 media_path = os.path.join(settings.get('save_path'), 'media')
 if not os.path.exists(media_path):
@@ -153,3 +154,5 @@ jdb['tweets'] = sorted_tweets + jdb['tweets']
 print('saving to database...')
 with open(db_file, 'w') as f:
     json.dump(jdb, f)
+
+print('database now stands at {} captured tweets'.format(len(jdb['tweets'])))
