@@ -1,2 +1,4 @@
 pyyaml>=3.13
 tweepy>=3.5.0
+python-twitter>=3.5
+tqdm>=4.31.1
