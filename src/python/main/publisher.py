@@ -24,7 +24,7 @@ parser.add_argument('--configuration', '-c', help="the path to the config folder
 parser.add_argument('--verbose', '-v', help="enable verbose logging", type=bool, default=False)
 
 args = parser.parse_args()
-if args.configuration == None:
+if args.configuration is None:
     print(parser.format_help())
     raise FileNotFoundError("You haven't specified a configuration path")
 
@@ -51,18 +51,15 @@ if not os.path.exists(profile_path):
 if not os.path.exists(os.path.join(media_path, "twitter_logo.png")):
     url = ("https://upload.wikimedia.org/wikipedia/en/thumb/9/9f/"
            "Twitter_bird_logo_2012.svg/295px-Twitter_bird_logo_2012.svg.png")
-    try:
-        urllib.request.urlretrieve(url, os.path.join(media_path, "twitter_logo.png"))
-    except:
-        print(url)
-        raise
+    urllib.request.urlretrieve(url, os.path.join(media_path, "twitter_logo.png"))
 
 # Database file (JSON)
 try:
     with open(db_file, 'r') as f:
         jdb = json.load(f)
-except:
-    raise FileNotFoundError("Database not found!")
+except FileNotFoundError:
+    logging.error("Database not found!")
+    raise
 
 # Load credentials from json file
 creds = conf.get('credentials')
@@ -91,9 +88,10 @@ threads = create_threads(all_tweets)
 try:
     with open(user_db_file, 'r') as f:
         user_dict = json.load(f)
-        logging.info("Loaded user file")
-except:
+        logging.info("Loaded user database")
+except FileNotFoundError:
     user_dict = {}
+    logging.info("Creating new user database")
 
 
 def get_user_data(screen_name):
@@ -102,11 +100,11 @@ def get_user_data(screen_name):
         try:
             user = api.GetUser(screen_name=screen_name, include_entities=True)
         except TwitterError:
-            default = 'https://abs.twimg.com/sticky/default_profile_images/default_profile_normal.png'
+            default = settings.get('default_user_image')
             user = twitter.User(screen_name=screen_name, profile_image_url=default)
         profile_picture = "profile/{}.jpg".format(screen_name)
 
-        path =  os.path.join(profile_path, "{}.jpg".format(screen_name))
+        path = os.path.join(profile_path, "{}.jpg".format(screen_name))
         if not os.path.exists(path):
             urllib.request.urlretrieve(user.profile_image_url, path)
         user_dict[screen_name] = {}
@@ -115,9 +113,9 @@ def get_user_data(screen_name):
 
     return user_dict[screen_name]
 
+
 tex_file = os.path.join(save_path, 'tweets.tex')
 shutil.copyfile(os.path.join('doc', 'header.tex'), tex_file)
-
 
 tweetTeX = "\\tweet{{{}}}{{{}}}{{{}}}{{{}}}{{{}}}{{{}}}{{{}}}{{{}}}"
 mediaTeX = "\\tweetmedia{{{}}}"
@@ -137,6 +135,7 @@ def calculate_margins(tweet):
     picture_margin = sum(picture_margin)
     return text_margin + picture_margin
 
+
 with open(tex_file, 'a') as f:
     logging.info("Creating LaTeX file from threads")
     for thread in tqdm(threads):
@@ -148,7 +147,8 @@ with open(tex_file, 'a') as f:
             else:
                 modifier = "{0:.2f}".format(calculate_margins(tweet))
                 threadLine = threadTeX.format(modifier)
-            media_str = " ".join(mediaTeX.format(m.filename) for m in tweet.media)+"\n\\vspace{10pt}\n"
+            media_str = " ".join(mediaTeX.format(m.filename) for m in tweet.media) \
+                        + "\n\\vspace{10pt}\n"
             f.write(tweetTeX.format(get_user_data(tweet.author).get('profile_picture'),
                                     threadLine,
                                     clean_text(get_user_data(tweet.author).get('name')),
@@ -161,8 +161,6 @@ with open(tex_file, 'a') as f:
             f.write("\n\n")  # Force a new line between each tweet
         f.write(ruleTeX)
         f.write("% ---------------------------------------\n\n")
-
-
     f.write("\n\\end{document}")
 
 with open(user_db_file, 'w') as f:

@@ -51,7 +51,7 @@ if __name__ == "__main__":
     parser.add_argument('--verbose', '-v', help="enable verbose logging", type=bool, default=False)
 
     args = parser.parse_args()
-    if args.configuration == None:
+    if args.configuration is None:
         logging.warning(parser.format_help())
         raise FileNotFoundError("You haven't specified a configuration path")
 
@@ -112,7 +112,7 @@ if __name__ == "__main__":
         logging.info("No new tweets were found.")
         sys.exit(0)
 
-    if last_found_tweet != None:
+    if last_found_tweet is not None:
         logging.info('found', len(feed), 'tweets since tweet.id = {}'.format(last_found_tweet))
 
     new_tweets = []
@@ -125,14 +125,15 @@ if __name__ == "__main__":
 
     # Get a list of the parent tweets not already grabbed
     parent_ids = [id for id in reply_ids if id not in parsed_ids]
-    parent_ids = list(filter(lambda x: x != None, parent_ids))
+    parent_ids = list(filter(lambda x: x is not None, parent_ids))
 
     # Only run if we have extra tweets to collect
     if len(parent_ids) != 0:
         logging.info('Getting originals from replies')
         feed = api.GetStatuses(parent_ids)
 
-        logging.info('Found {} unique tweets upstream of replies from primary user.'.format(len(feed)))
+        logging.info('Found {} extra tweets inside threads of which the primary '
+                     'user has replied.'.format(len(feed)))
         for tweet in feed:
             new_tweets.append(parse_tweet(tweet))
 

@@ -70,17 +70,12 @@ class Tweet(TwitterObject):
         self.in_reply_to = in_reply_to
         self.in_reply_to_status_id = in_reply_to_status_id
         self.text = text
-        #self.media = media
-        if media != None:
+        if media is not None:
             if len(media) != 0:
                 if type(media[0]) == MediaItem:
                     self.media = media
                 elif type(media[0]) == dict:
-                    try:
-                        self.media = [self.new_from_json(m) for m in media]
-                    except:
-                        print(media)
-                        raise
+                    self.media = [self.new_from_json(m) for m in media]
             else:
                 self.media = media
         else:
@@ -109,7 +104,6 @@ class Tweet(TwitterObject):
 
         return super(cls, cls).new_from_json(data=data, media=media)
 
-
     def to_dict(self) -> dict:
         """
         Produces a dict object of the tweet for use in saving to a json database
@@ -129,7 +123,6 @@ class Tweet(TwitterObject):
                 json_dict["media"] = media_list
             else:
                 json_dict[key] = value
-
 
         return json_dict
 
