@@ -1,7 +1,14 @@
 general:
   save_path: .
-  userid: '@BarackObama'
+  userid: 'BarackObama'
+  # The number of tweets to get since the last collected ID.
+  max_tweets: 99
+  # If True, will download found media in tweets to the save path
   download_media: True
+  # Verbosity of logging messages
+  verbose: True
+  # The default image to use for users that no longer have twitter accounts (or are blocked).
+  default_user_image: 'https://abs.twimg.com/sticky/default_profile_images/default_profile_normal.png'
 
 credentials:
   consumer_key:

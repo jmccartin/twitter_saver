@@ -37,4 +37,6 @@ Temporary Items
 # Configuration (with private keys)
 conf/configuration.yml
 
+# Python
+*.pyc
 

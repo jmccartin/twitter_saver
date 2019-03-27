@@ -49,6 +49,3 @@ def clean_text(text: str) -> str:
     for char in ['&', '#', '_', '%', '$', '{', '}']:
         text = str(text).replace(char, '\\{}'.format(char))
     return str(text)
-
-
-
