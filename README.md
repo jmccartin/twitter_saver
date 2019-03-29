@@ -9,25 +9,29 @@ Grabs tweets for a given user ID and collates threaded conversations into an off
   
 ## Requirements  
 **For saving conversations:** 
-Any Python 3.4+ distribution, with required libraries found in `requirements.txt`  
-  
+- Any Python 3.4+ distribution (due to type hinting)
+ 
 **For publishing conversations:**  
-A working LaTeX distribution (with XeLaTeX)  
+- A working LaTeX distribution (with XeLaTeX)  
+- Fontawesome 5 installed locally (OTF fonts)
   
-## Usage  
+## Usage
   
- - Copy `configuration-defaults.yml` to your own version: `configuration.yml`,  
-and specify the user whose tweets you wish to save.  
-  
+- Copy `configuration-defaults.yml` to your own version: `configuration.yml`, and specify the user whose tweets you wish to save. 
+- To install the libraries, execute `pip install -r requirements.txt`  
+- Execute `python src/python/main/saver.py --configuration conf/` to run the tweet saver.
+
+The runtime bash scripts assume a Conda environment named 'TwitterSave'.
+This assumption and requirement will be fixed in the future.
  - Execute `run.sh` from the command line to save tweets to the configured  
 folder area.  
   
  - Execute `publish.sh` from the command line to publish a LaTeX file from   
-the saved json database.  
+the saved json database.
   
 ## Roadmap  
   
 - Better handling of branching threads
-- Unit tests  
+- Unit tests (with codecov) 
 - A tider and dynamic view of saved tweets  
   - Perhaps using HTML/AngularJS?
