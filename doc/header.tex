@@ -11,6 +11,7 @@
 \usepackage[T1]{fontenc}
 \usepackage{xcolor}
 \usepackage[vmargin=10pt,hmargin=100pt]{geometry}
+\usepackage{fontawesome5}
 
 \definecolor{shadecolor}{RGB}{230,236,240}
 
@@ -18,7 +19,6 @@
 
 \graphicspath{{media/}}
 
-% \setlength{\parindent}{-1em}
 
 \newcommand{\negpar}[1][11pt]{%
   \ifvmode\else\par\fi
@@ -28,7 +28,9 @@
 \spaceskip=0.8\fontdimen2\font plus 0.5\fontdimen3\font
 minus 0.5\fontdimen4\font
 
-% ---- TWEET ------
+% ---------------------
+% -- Tweet container --
+% ---------------------
 \newcommand{\tweet}[8]{
     \begin{minipage}[t]{0.12\linewidth}
         \vspace{0pt}
@@ -46,7 +48,7 @@ minus 0.5\fontdimen4\font
         \begin{minipage}{0.05\linewidth}
         \end{minipage}%
         \begin{minipage}{0.05\linewidth}
-            \includegraphics[width=0.4cm]{Speech_bubble.pdf}
+            \faComment[regular]
         \end{minipage}%
         \begin{minipage}{0.1\linewidth}
             #8
@@ -54,6 +56,9 @@ minus 0.5\fontdimen4\font
     \end{minipage}%
 }
 
+% ---------------------
+% -- Media container --
+% ---------------------
 \newcommand{\tweetmedia}[1]{
     \begin{tikzpicture}
         \def\ig{%
@@ -64,6 +69,9 @@ minus 0.5\fontdimen4\font
     \end{tikzpicture}
 }
 
+% ----------------------------
+% -- Vertical thread joiner --
+% ----------------------------
 \newcommand{\threadline}[1]{
     \begin{center}
         \begin{tikzpicture}
@@ -76,6 +84,9 @@ minus 0.5\fontdimen4\font
     \end{center}
 }
 
+% ----------------------------
+% -- Horizontal thread rule --
+% ----------------------------
 \newcommand{\threadrule}{
     \vspace{10pt}
     \begin{center}
@@ -92,25 +103,6 @@ minus 0.5\fontdimen4\font
 
 \begin{document}
 
-\begin{titlepage}
-    \centering
-    \hrule
-
-    \begin{tikzpicture}[remember picture,overlay,shift={(current page.center)}]
-        %\draw (0, 0) node[opacity=0.4,inner sep=0pt] {\includegraphics[height=1.05\paperheight]{ivy_mike}};
-        %\fill[white,path fading=south] (0,0.5\paperheight) rectangle (\paperwidth,0.5\paperheight);
-        %\shade [inner color=white, outer color=white, even odd rule, fill=white] circle (1.5) circle (1);
-        \draw (0, 5) node {\Huge \bfseries Tweet Archive};
-        \draw (0, 3) node {\includegraphics[width=0.15\textwidth]{twitter_logo.png}\par\vspace{1cm}};
-        \draw (0, 1) node {\large A series of collected tweets for user:};
-        \draw (0, 0) node {\LARGE \bfseries @NuclearWeapons7};
-        \draw (0, -1) node {\large \emph{collected between:}};
-        \draw (0, -2) node {\large 13th December, 2018 -- 28th February, 2019};
-        \draw (0, -3) node {\footnotesize \emph{Some tweets may exist from dates previous to this period, or be missing entirely.}};
-        \draw (0, -10) node {\bfseries Version 1};
-    \end{tikzpicture}
-
-\end{titlepage}
-
-\newpage
-
+% ----------------
+% -- Title page --
+% ----------------

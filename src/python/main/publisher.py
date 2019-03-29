@@ -15,6 +15,7 @@ import urllib.request
 import yaml
 
 from src.python.main.objects import Tweet
+from src.python.main.latex_functions import *
 from src.python.main.utils import create_threads, format_timestamp, clean_text
 
 logging.basicConfig(level=logging.INFO)
@@ -36,12 +37,12 @@ with open(yaml_conf, 'r') as f:
         print(yaml.dump(conf, default_flow_style=False))
 
 settings = conf.get('general')
-user_id = settings['user_id']
+screen_name = settings['screen_name']
 
-save_path = os.path.join(settings.get('save_path'), user_id)
+save_path = os.path.join(settings.get('save_path'), screen_name)
 media_path = os.path.join(save_path, 'media')
 profile_path = os.path.join(media_path, 'profile')
-db_file = os.path.join(save_path, 'db-{}.json'.format(user_id))
+db_file = os.path.join(save_path, 'db-{}.json'.format(screen_name))
 user_db_file = os.path.join(save_path, 'users-db.json')
 
 if not os.path.exists(profile_path):
@@ -117,11 +118,6 @@ def get_user_data(screen_name):
 tex_file = os.path.join(save_path, 'tweets.tex')
 shutil.copyfile(os.path.join('doc', 'header.tex'), tex_file)
 
-tweetTeX = "\\tweet{{{}}}{{{}}}{{{}}}{{{}}}{{{}}}{{{}}}{{{}}}{{{}}}"
-mediaTeX = "\\tweetmedia{{{}}}"
-threadTeX = "\\threadline{{{}}}"
-ruleTeX = "\\threadrule\n"
-
 
 def calculate_margins(tweet):
     text_margin = 0.7 + 0.5 * math.floor(len(tweet.text) / 82)
@@ -131,12 +127,15 @@ def calculate_margins(tweet):
         if not os.path.exists(file_path):
             logging.warning("File {} not found in media path!".format(file_path))
         (width, height) = Image.open(file_path).size
-        picture_margin.append((12.5/width)*height)
+        picture_margin.append((12.5 / width) * height)
     picture_margin = sum(picture_margin)
     return text_margin + picture_margin
 
 
 with open(tex_file, 'a') as f:
+    f.write(titleTeX.format(screenName=screen_name,
+                            fromDate=format_timestamp(threads[0][0].created_at),
+                            toDate=format_timestamp(threads[-1][-1].created_at)))
     logging.info("Creating LaTeX file from threads")
     for thread in tqdm(threads):
         f.write("% ---------------- THREAD ---------------\n")
@@ -156,7 +155,7 @@ with open(tex_file, 'a') as f:
                                     format_timestamp(tweet.created_at),
                                     clean_text(tweet.text),
                                     media_str,
-                                    len(thread)-(i+1)
+                                    len(thread) - (i + 1)
                                     ))
             f.write("\n\n")  # Force a new line between each tweet
         f.write(ruleTeX)

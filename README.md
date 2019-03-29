@@ -1,9 +1,9 @@
 
   
-# Twitter Saver    <img src="https://upload.wikimedia.org/wikipedia/en/9/9f/Twitter_bird_logo_2012.svg" width="48">
+# Twitter Saver    <img src="https://upload.wikimedia.org/wikipedia/en/9/9f/Twitter_bird_logo_2012.svg" width="42">
   
-<img title="Build Status" align="right"  
-     src="https://travis-ci.org/jmccartin/twitter_saver.svg?branch=master" />  
+![Build Status](https://travis-ci.org/jmccartin/twitter_saver.svg?branch=master) 
+[![codecov](https://codecov.io/gh/jmccartin/twitter_saver/branch/master/graph/badge.svg)](https://codecov.io/gh/jmccartin/twitter_saver)
        
 Grabs tweets for a given user ID and collates threaded conversations into an offline LaTeX document (or a JSON file). This is particularly useful for when certain accounts decide to delete their tweet history, but also has value as an offline reference.
   
