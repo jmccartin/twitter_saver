@@ -34,7 +34,7 @@ def create_threads(tweets: List[Tweet]) -> List[List[Tweet]]:
     return sorted_collection
 
 
-def format_timestamp(timestamp: datetime.datetime) -> str:
+def format_timestamp(timestamp: str) -> str:
     try:
         mydate = datetime.datetime.strptime(timestamp, '%Y-%m-%d %H:%M:%S')
     except ValueError:

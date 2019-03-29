@@ -6,6 +6,8 @@ python:
 install:
   - pip install -r requirements.txt
   - pip install pycodestyle
+  - pip install codecov
 # Tests
 script:
-  - pycodestyle --statistics --max-line-length=100 src/
+  - pycodestyle src/
+  - codecov

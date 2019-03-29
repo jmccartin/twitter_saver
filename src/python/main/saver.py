@@ -34,14 +34,19 @@ def parse_tweet(tweet: twitter.Status) -> Tweet:
             media_obj.get_media(media_path)
             media_list.append(media_obj)
 
-    print("parse tweet, tweet_id = {}".format(tweet.id))
+    print(tweet.full_text)
+
+    if tweet.full_text is None:
+        text = tweet.text
+    else:
+        text = tweet.full_text
 
     return Tweet(id=tweet.id,
                  created_at=str(tweet.created_at),
                  author=tweet.user.screen_name,
                  in_reply_to=tweet.in_reply_to_screen_name,
                  in_reply_to_status_id=tweet.in_reply_to_status_id,
-                 text=tweet.text,
+                 text=text,
                  media=media_list)
 
 
@@ -63,18 +68,18 @@ if __name__ == "__main__":
             print(yaml.dump(conf, default_flow_style=False))
 
     settings = conf.get('general')
-    user_id = settings['user_id']
+    screen_name = settings['screen_name']
     max_tweets = settings['max_tweets']
-    save_path = os.path.join(settings.get('save_path'), user_id)
+    save_path = os.path.join(settings.get('save_path'), screen_name)
 
-    logging.info('Grabbing all new tweets for user: {}'.format(user_id))
+    logging.info('Grabbing all new tweets for user: {}'.format(screen_name))
 
     media_path = os.path.join(save_path, 'media')
     if not os.path.exists(media_path):
         logging.info('path: {} does not exist, creating...'.format(media_path))
         os.makedirs(media_path)
 
-    db_file = os.path.join(save_path, 'db-{}.json'.format(user_id))
+    db_file = os.path.join(save_path, 'db-{}.json'.format(screen_name))
 
     # Load credentials from json file
     credentials = conf.get('credentials')
@@ -87,7 +92,8 @@ if __name__ == "__main__":
     api = twitter.Api(consumer_key=consumer_key,
                       consumer_secret=consumer_secret,
                       access_token_key=access_token,
-                      access_token_secret=access_token_secret)
+                      access_token_secret=access_token_secret,
+                      tweet_mode="extended")
 
     # Database file (JSON)
     try:
@@ -103,7 +109,7 @@ if __name__ == "__main__":
 
     logging.info("Getting primary feed")
 
-    feed = api.GetUserTimeline(screen_name=settings['user_id'],
+    feed = api.GetUserTimeline(screen_name=screen_name,
                                since_id=last_found_tweet,
                                count=max_tweets,
                                include_rts=False)
@@ -113,7 +119,7 @@ if __name__ == "__main__":
         sys.exit(0)
 
     if last_found_tweet is not None:
-        logging.info('found', len(feed), 'tweets since tweet.id = {}'.format(last_found_tweet))
+        logging.info('found {} tweets since tweet.id = {}'.format(len(feed), last_found_tweet))
 
     new_tweets = []
     reply_ids = []
@@ -129,11 +135,10 @@ if __name__ == "__main__":
 
     # Only run if we have extra tweets to collect
     if len(parent_ids) != 0:
-        logging.info('Getting originals from replies')
+        logging.info('Getting tweets upstream from replies')
         feed = api.GetStatuses(parent_ids)
 
-        logging.info('Found {} extra tweets inside threads of which the primary '
-                     'user has replied.'.format(len(feed)))
+        logging.info('Found {} upstream tweets.'.format(len(feed)))
         for tweet in feed:
             new_tweets.append(parse_tweet(tweet))
 

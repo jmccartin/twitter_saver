@@ -1,6 +1,7 @@
 general:
+  # Where to store the database, media files, and .tex documents
   save_path: .
-  userid: 'BarackObama'
+  screen_name: 'BarackObama'
   # The number of tweets to get since the last collected ID.
   max_tweets: 99
   # If True, will download found media in tweets to the save path
@@ -10,6 +11,7 @@ general:
   # The default image to use for users that no longer have twitter accounts (or are blocked).
   default_user_image: 'https://abs.twimg.com/sticky/default_profile_images/default_profile_normal.png'
 
+# Twitter API credentials. Must have a developer account.
 credentials:
   consumer_key:
   consumer_secret:
