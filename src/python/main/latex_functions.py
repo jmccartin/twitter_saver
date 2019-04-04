@@ -24,9 +24,11 @@ titleTeX = """
     \\vspace{{0.95\paperheight}}
     \\hrule
 
+    \\newpage
+
 \\end{{titlepage}}
 
-\\newpage"""
+"""
 
 tweetTeX = "\\tweet{{{}}}{{{}}}{{{}}}{{{}}}{{{}}}{{{}}}{{{}}}{{{}}}"
 mediaTeX = "\\tweetmedia{{{}}}"

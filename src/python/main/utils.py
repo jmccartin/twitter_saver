@@ -6,7 +6,7 @@ import urllib.request
 from src.python.main.objects import Tweet
 
 
-def create_threads(tweets: List[Tweet]) -> List[List[Tweet]]:
+def create_threads_foldl(tweets: List[Tweet]) -> List[List[Tweet]]:
     """
     Attempts to thread tweets based on their creation
     timestamp, and who replied to each tweet.
@@ -34,12 +34,47 @@ def create_threads(tweets: List[Tweet]) -> List[List[Tweet]]:
     return sorted_collection
 
 
-def format_timestamp(timestamp: str) -> str:
+def create_threads(tweets: List[Tweet]) -> List[List[Tweet]]:
+    """
+    Attempts to thread tweets based on their creation
+    timestamp, and who replied to each tweet.
+
+    :param tweets: The database collection of tweets (as a list)
+    :return: A list of threaded tweets
+    """
+
+    parents = [[tweet] for tweet in tweets if tweet.in_reply_to_status_id is None]
+    replies = [tweet for tweet in tweets if tweet.in_reply_to_status_id is not None]
+
+    threads = []
+    for thread in parents:
+        # Get all tweets less than a day older than the last tweet of the thread
+        inside_window = filter(lambda tweet:
+                               calc_day_diff(tweet.created_at, thread[-1].created_at).days == 0,
+                               replies)
+        # Check if the tweets in the window are in the thread
+        for tweet in inside_window:
+            if tweet.in_reply_to_status_id == thread[-1].id:
+                thread.append(tweet)
+        threads.append(thread)
+
+    return sorted(threads, key=lambda thread: create_timestamp(thread[0].created_at))
+
+
+def create_timestamp(time: str) -> datetime.datetime:
     try:
-        mydate = datetime.datetime.strptime(timestamp, '%Y-%m-%d %H:%M:%S')
+        my_date = datetime.datetime.strptime(time, '%Y-%m-%d %H:%M:%S')
     except ValueError:
-        mydate = datetime.datetime.strptime(timestamp, '%a %b %d %H:%M:%S %z %Y')
-    return mydate.strftime("%b %d %Y")
+        my_date = datetime.datetime.strptime(time, '%a %b %d %H:%M:%S %z %Y')
+    return my_date
+
+
+def format_timestamp(timestamp: str) -> str:
+    return create_timestamp(timestamp).strftime("%b %d %Y")
+
+
+def calc_day_diff(time1: str, time2: str) -> datetime.timedelta:
+    return create_timestamp(time1) - create_timestamp(time2)
 
 
 def clean_text(text: str) -> str:

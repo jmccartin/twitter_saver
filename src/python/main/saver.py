@@ -34,8 +34,6 @@ def parse_tweet(tweet: twitter.Status) -> Tweet:
             media_obj.get_media(media_path)
             media_list.append(media_obj)
 
-    print(tweet.full_text)
-
     if tweet.full_text is None:
         text = tweet.text
     else:
