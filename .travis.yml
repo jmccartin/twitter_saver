@@ -8,7 +8,7 @@ python:
 install:
   - pip install -r requirements.txt
   - pip install pycodestyle
-  - pip install --user codecov
+  - pip install codecov
   - pip install pytest
 # Tests
 script:
