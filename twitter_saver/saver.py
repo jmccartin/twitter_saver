@@ -25,10 +25,10 @@ def parse_tweet(tweet: twitter.Status) -> Tweet:
 
     media_list = []
 
-    if settings['download_media'] and tweet.media is not None:
+    if settings["download_media"] and tweet.media is not None:
         for media in tweet.media:
             media_obj = MediaItem(id=media.id,
-                                  filename=media.media_url.split('/')[-1],
+                                  filename=media.media_url.split("/")[-1],
                                   url=media.media_url,
                                   type=media.type)
             media_obj.get_media(media_path)
@@ -50,42 +50,42 @@ def parse_tweet(tweet: twitter.Status) -> Tweet:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--configuration', '-c', help="the path to the config folder", type=str)
-    parser.add_argument('--verbose', '-v', help="enable verbose logging", type=bool, default=False)
+    parser.add_argument("--configuration", "-c", help="the path to the config folder", type=str)
+    parser.add_argument("--verbose", "-v", help="enable verbose logging", type=bool, default=False)
 
     args = parser.parse_args()
     if args.configuration is None:
         logging.warning(parser.format_help())
-        raise FileNotFoundError("You haven't specified a configuration path")
+        raise FileNotFoundError("You have not specified a configuration path")
 
-    yaml_conf = os.path.join(args.configuration, 'configuration.yml')
+    yaml_conf = os.path.join(args.configuration, "configuration.yml")
 
-    with open(yaml_conf, 'r') as f:
+    with open(yaml_conf, "r") as f:
         conf = yaml.load(f)
         if args.verbose:
             print(yaml.dump(conf, default_flow_style=False))
 
-    settings = conf.get('general')
-    screen_name = settings['screen_name']
-    max_tweets = settings['max_tweets']
-    save_path = os.path.join(settings.get('save_path'), screen_name)
+    settings = conf.get("general")
+    screen_name = settings["screen_name"]
+    max_tweets = settings["max_tweets"]
+    save_path = os.path.join(settings.get("save_path"), screen_name)
 
-    logging.info('Grabbing all new tweets for user: {}'.format(screen_name))
+    logging.info("Grabbing all new tweets for user: {}".format(screen_name))
 
-    media_path = os.path.join(save_path, 'media')
+    media_path = os.path.join(save_path, "media")
     if not os.path.exists(media_path):
-        logging.info('path: {} does not exist, creating...'.format(media_path))
+        logging.info("path: {} does not exist, creating...".format(media_path))
         os.makedirs(media_path)
 
-    db_file = os.path.join(save_path, 'db-{}.json'.format(screen_name))
+    db_file = os.path.join(save_path, "db-{}.json".format(screen_name))
 
     # Load credentials from json file
-    credentials = conf.get('credentials')
+    credentials = conf.get("credentials")
 
-    consumer_key = credentials['consumer_key']
-    consumer_secret = credentials['consumer_secret']
-    access_token = credentials['access_token']
-    access_token_secret = credentials['access_secret']
+    consumer_key = credentials["consumer_key"]
+    consumer_secret = credentials["consumer_secret"]
+    access_token = credentials["access_token"]
+    access_token_secret = credentials["access_secret"]
 
     api = twitter.Api(consumer_key=consumer_key,
                       consumer_secret=consumer_secret,
@@ -95,10 +95,10 @@ if __name__ == "__main__":
 
     # Database file (JSON)
     try:
-        with open(db_file, 'r') as f:
+        with open(db_file, "r") as f:
             jdb = json.load(f)
             # Sort the database to get the last known tweet
-            db_tweet_ids = sorted([tweet.get('id') for tweet in jdb.get('tweets')])
+            db_tweet_ids = sorted([tweet.get("id") for tweet in jdb.get("tweets")])
             last_found_tweet = str(db_tweet_ids[-1])
     except FileNotFoundError:
         logging.warning("Database not found, creating new file...")
@@ -117,11 +117,13 @@ if __name__ == "__main__":
         sys.exit(0)
 
     if last_found_tweet is not None:
-        logging.info('found {} tweets since tweet.id = {}'.format(len(feed), last_found_tweet))
+        logging.info("Found {} tweets since tweet.id = {}".format(len(feed), last_found_tweet))
 
     new_tweets = []
     reply_ids = []
     parsed_ids = []
+
+    logging.info("Parsing tweets and saving media.")
     for tweet in feed:
         new_tweets.append(parse_tweet(tweet))
         reply_ids.append(tweet.in_reply_to_status_id)
@@ -133,20 +135,20 @@ if __name__ == "__main__":
 
     # Only run if we have extra tweets to collect
     if len(parent_ids) != 0:
-        logging.info('Getting tweets upstream from replies')
+        logging.info("Getting tweets upstream from replies")
         feed = api.GetStatuses(parent_ids)
 
-        logging.info('Found {} upstream tweets.'.format(len(feed)))
+        logging.info("Found {} upstream tweets.".format(len(feed)))
         for tweet in feed:
             new_tweets.append(parse_tweet(tweet))
 
     sorted_tweets = sorted(new_tweets, key=lambda x: x.id, reverse=True)
     json_tweets = [tweet.to_dict() for tweet in sorted_tweets]
 
-    jdb['tweets'] = json_tweets + jdb['tweets']
+    jdb["tweets"] = json_tweets + jdb["tweets"]
 
-    logging.info('Saving to database')
-    with open(db_file, 'w') as f:
+    logging.info("Saving to database")
+    with open(db_file, "w") as f:
         json.dump(jdb, f)
 
-    logging.info('Database now stands at {} captured tweets'.format(len(jdb['tweets'])))
+    logging.info("Database now stands at {} captured tweets.".format(len(jdb["tweets"])))

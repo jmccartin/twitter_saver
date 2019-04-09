@@ -14,35 +14,36 @@ from twitter.error import TwitterError
 import urllib.request
 import yaml
 
+from twitter_saver.latex_functions import *
 from twitter_saver.objects import Tweet
-from twitter_saver import create_threads, format_timestamp, clean_text
+from twitter_saver.utils import create_threads, format_timestamp, clean_text
 
 logging.basicConfig(level=logging.INFO)
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--configuration', '-c', help="the path to the config folder", type=str)
-parser.add_argument('--verbose', '-v', help="enable verbose logging", type=bool, default=False)
+parser.add_argument("--configuration", "-c", help="the path to the config folder", type=str)
+parser.add_argument("--verbose", "-v", help="enable verbose logging", type=bool, default=False)
 
 args = parser.parse_args()
 if args.configuration is None:
     print(parser.format_help())
-    raise FileNotFoundError("You haven't specified a configuration path")
+    raise FileNotFoundError("You have not specified a configuration path")
 
-yaml_conf = os.path.join(args.configuration, 'configuration.yml')
+yaml_conf = os.path.join(args.configuration, "configuration.yml")
 
-with open(yaml_conf, 'r') as f:
+with open(yaml_conf, "r") as f:
     conf = yaml.load(f)
     if args.verbose:
         print(yaml.dump(conf, default_flow_style=False))
 
-settings = conf.get('general')
-screen_name = settings['screen_name']
+settings = conf.get("general")
+screen_name = settings["screen_name"]
 
-save_path = os.path.join(settings.get('save_path'), screen_name)
-media_path = os.path.join(save_path, 'media')
-profile_path = os.path.join(media_path, 'profile')
-db_file = os.path.join(save_path, 'db-{}.json'.format(screen_name))
-user_db_file = os.path.join(save_path, 'users-db.json')
+save_path = os.path.join(settings.get("save_path"), screen_name)
+media_path = os.path.join(save_path, "media")
+profile_path = os.path.join(media_path, "profile")
+db_file = os.path.join(save_path, "db-{}.json".format(screen_name))
+user_db_file = os.path.join(save_path, "users-db.json")
 
 if not os.path.exists(profile_path):
     os.makedirs(profile_path)
@@ -55,19 +56,19 @@ if not os.path.exists(os.path.join(media_path, "twitter_logo.png")):
 
 # Database file (JSON)
 try:
-    with open(db_file, 'r') as f:
+    with open(db_file, "r") as f:
         jdb = json.load(f)
 except FileNotFoundError:
     logging.error("Database not found!")
     raise
 
 # Load credentials from json file
-creds = conf.get('credentials')
+creds = conf.get("credentials")
 
-consumer_key = creds['consumer_key']
-consumer_secret = creds['consumer_secret']
-access_token = creds['access_token']
-access_token_secret = creds['access_secret']
+consumer_key = creds["consumer_key"]
+consumer_secret = creds["consumer_secret"]
+access_token = creds["access_token"]
+access_token_secret = creds["access_secret"]
 
 api = twitter.Api(consumer_key=consumer_key,
                   consumer_secret=consumer_secret,
@@ -77,7 +78,7 @@ api = twitter.Api(consumer_key=consumer_key,
 
 all_tweets = []
 
-for j_tweet in jdb['tweets']:
+for j_tweet in jdb["tweets"]:
     tweet = Tweet.new_from_json(j_tweet)
     all_tweets.append(tweet)
 
@@ -86,7 +87,7 @@ threads = create_threads(all_tweets)
 
 # Users Database file (JSON)
 try:
-    with open(user_db_file, 'r') as f:
+    with open(user_db_file, "r") as f:
         user_dict = json.load(f)
         logging.info("Loaded user database")
 except FileNotFoundError:
@@ -96,11 +97,11 @@ except FileNotFoundError:
 
 def get_user_data(screen_name):
     if screen_name not in user_dict:
-        logging.debug('Looking up profile info for user: {}'.format(screen_name))
+        logging.debug("Looking up profile info for user: {}".format(screen_name))
         try:
             user = api.GetUser(screen_name=screen_name, include_entities=True)
         except TwitterError:
-            default = settings.get('default_user_image')
+            default = settings.get("default_user_image")
             user = twitter.User(screen_name=screen_name, profile_image_url=default)
         profile_picture = "profile/{}.jpg".format(screen_name)
 
@@ -108,14 +109,14 @@ def get_user_data(screen_name):
         if not os.path.exists(path):
             urllib.request.urlretrieve(user.profile_image_url, path)
         user_dict[screen_name] = {}
-        user_dict[screen_name]['name'] = user.name
-        user_dict[screen_name]['profile_picture'] = profile_picture
+        user_dict[screen_name]["name"] = user.name
+        user_dict[screen_name]["profile_picture"] = profile_picture
 
     return user_dict[screen_name]
 
 
-tex_file = os.path.join(save_path, 'tweets.tex')
-shutil.copyfile(os.path.join('resources', 'header.tex'), tex_file)
+tex_file = os.path.join(save_path, "tweets.tex")
+shutil.copyfile(os.path.join("resources", "header.tex"), tex_file)
 
 
 def calculate_margins(tweet):
@@ -131,7 +132,7 @@ def calculate_margins(tweet):
     return text_margin + picture_margin
 
 
-with open(tex_file, 'a') as f:
+with open(tex_file, "a") as f:
     f.write(titleTeX.format(screenName=screen_name,
                             fromDate=format_timestamp(threads[0][0].created_at),
                             toDate=format_timestamp(threads[-1][-1].created_at)))
@@ -139,7 +140,7 @@ with open(tex_file, 'a') as f:
     for thread in tqdm(threads):
         f.write("% ---------------- THREAD ---------------\n")
         for i, tweet in enumerate(thread):
-            # Don't print a thread line for last tweet
+            # Don"t print a thread line for last tweet
             if tweet == thread[-1]:
                 threadLine = ""
             else:
@@ -147,9 +148,9 @@ with open(tex_file, 'a') as f:
                 threadLine = threadTeX.format(modifier)
             media_str = " ".join(mediaTeX.format(m.filename) for m in tweet.media) \
                         + "\n\\vspace{10pt}\n"
-            f.write(tweetTeX.format(get_user_data(tweet.author).get('profile_picture'),
+            f.write(tweetTeX.format(get_user_data(tweet.author).get("profile_picture"),
                                     threadLine,
-                                    clean_text(get_user_data(tweet.author).get('name')),
+                                    clean_text(get_user_data(tweet.author).get("name")),
                                     "@" + clean_text(tweet.author),
                                     format_timestamp(tweet.created_at),
                                     clean_text(tweet.text),
@@ -161,7 +162,7 @@ with open(tex_file, 'a') as f:
         f.write("% ---------------------------------------\n\n")
     f.write("\n\\end{document}")
 
-with open(user_db_file, 'w') as f:
+with open(user_db_file, "w") as f:
     json.dump(user_dict, f)
 
 logging.info("Finished creating LaTeX file")
