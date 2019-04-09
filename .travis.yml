@@ -13,7 +13,7 @@ install:
 # Tests
 script:
   - pycodestyle twitter_saver/
-  - pytest twitter_saver/tests/
+  - pytest --cov=./ twitter_saver/tests/
 # Code coverage
 after_success:
   - codecov
