@@ -10,8 +10,11 @@ install:
   - pip install pycodestyle
   - pip install codecov
   - pip install pytest
+  - pip install pytest-cov
 # Tests
 script:
-  - pycodestyle src/
-  - pytest src/
+  - pycodestyle twitter_saver/
+  - pytest --cov=./ twitter_saver/tests/
+# Code coverage
+after_success:
   - codecov

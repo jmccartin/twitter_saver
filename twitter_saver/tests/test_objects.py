@@ -1,6 +1,4 @@
-import pytest
-
-from src.python.main.objects import Tweet
+from twitter_saver.objects import Tweet
 
 media_json = {
     "id": 1,
