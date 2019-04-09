@@ -1,9 +1,8 @@
 import datetime
 import functools
 from typing import List
-import urllib.request
 
-from src.python.main.objects import Tweet
+from twitter_saver.objects import Tweet
 
 
 def create_threads_foldl(tweets: List[Tweet]) -> List[List[Tweet]]:

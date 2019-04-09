@@ -1,7 +1,5 @@
-import pytest
-
-from src.python.main.objects import Tweet
-from src.python.main.utils import create_threads
+from twitter_saver.objects import Tweet
+from twitter_saver.utils import create_threads
 
 data = [
     # Thread 1

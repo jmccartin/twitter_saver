@@ -8,10 +8,12 @@ python:
 install:
   - pip install -r requirements.txt
   - pip install pycodestyle
-  - pip install codecov
+  - pip install --user codecov
   - pip install pytest
 # Tests
 script:
-  - pycodestyle src/
-  - pytest src/
+  - pycodestyle twitter_saver/
+  - pytest twitter_saver/tests/
+# Code coverage
+after_success:
   - codecov

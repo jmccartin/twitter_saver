@@ -9,7 +9,7 @@ import sys
 import twitter
 import yaml
 
-from src.python.main.objects import MediaItem, Tweet
+from twitter_saver.objects import MediaItem, Tweet
 
 logging.basicConfig(level=logging.INFO)
 

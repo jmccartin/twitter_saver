@@ -14,9 +14,8 @@ from twitter.error import TwitterError
 import urllib.request
 import yaml
 
-from src.python.main.objects import Tweet
-from src.python.main.latex_functions import *
-from src.python.main.utils import create_threads, format_timestamp, clean_text
+from twitter_saver.objects import Tweet
+from twitter_saver import create_threads, format_timestamp, clean_text
 
 logging.basicConfig(level=logging.INFO)
 
@@ -116,7 +115,7 @@ def get_user_data(screen_name):
 
 
 tex_file = os.path.join(save_path, 'tweets.tex')
-shutil.copyfile(os.path.join('doc', 'header.tex'), tex_file)
+shutil.copyfile(os.path.join('resources', 'header.tex'), tex_file)
 
 
 def calculate_margins(tweet):
