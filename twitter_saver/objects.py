@@ -136,14 +136,19 @@ class Tweet(TwitterObject):
 
 class User(TwitterObject):
     def __init__(self,
-                 id,
-                 author,
-                 screen_name,
-                 profile_picture):
+                 id: int,
+                 author: str,
+                 screen_name: str,
+                 profile_picture: str):
         super(TwitterObject, self).__init__(id)
         self.author = author
         self.screen_name = screen_name
         self.profile_picture = profile_picture
+
+    def __repr__(self):
+        return "User(ID={user_id}, Author={author})".format(
+            user_id=self.id,
+            author=self.author)
 
 
 def parse_tweet(tweet: twitter.Status) -> Tweet:
