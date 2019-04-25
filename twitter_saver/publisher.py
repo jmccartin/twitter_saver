@@ -10,10 +10,9 @@ from PIL import Image
 import shutil
 from tqdm import tqdm
 import twitter
-from twitter.error import TwitterError
 import urllib.request
-import yaml
 
+from twitter_saver.configuration import Configuration
 from twitter_saver.latex_functions import *
 from twitter_saver.objects import Tweet
 from twitter_saver.utils import create_threads, format_timestamp, clean_text
@@ -31,28 +30,16 @@ if args.configuration is None:
 
 yaml_conf = os.path.join(args.configuration, "configuration.yml")
 
-with open(yaml_conf, "r") as f:
-    conf = yaml.load(f)
-    if args.verbose:
-        print(yaml.dump(conf, default_flow_style=False))
+conf = Configuration(yaml_conf)
 
-settings = conf.get("general")
-screen_name = settings["screen_name"]
-
-save_path = os.path.join(settings.get("save_path"), screen_name)
-media_path = os.path.join(save_path, "media")
-profile_path = os.path.join(media_path, "profile")
-db_file = os.path.join(save_path, "db-{}.json".format(screen_name))
-user_db_file = os.path.join(save_path, "users-db.json")
-
-if not os.path.exists(profile_path):
-    os.makedirs(profile_path)
+db_file = os.path.join(conf.save_path, "tweets-db.json")
+user_db_file = os.path.join(conf.save_path, "users-db.json")
 
 # Get a copy of the twitter logo for LaTeX doc front page
-if not os.path.exists(os.path.join(media_path, "twitter_logo.png")):
+if not os.path.exists(os.path.join(conf.media_path, "twitter_logo.png")):
     url = ("https://upload.wikimedia.org/wikipedia/en/thumb/9/9f/"
            "Twitter_bird_logo_2012.svg/295px-Twitter_bird_logo_2012.svg.png")
-    urllib.request.urlretrieve(url, os.path.join(media_path, "twitter_logo.png"))
+    urllib.request.urlretrieve(url, os.path.join(conf.media_path, "twitter_logo.png"))
 
 # Database file (JSON)
 try:
@@ -62,19 +49,11 @@ except FileNotFoundError:
     logging.error("Database not found!")
     raise
 
-# Load credentials from json file
-creds = conf.get("credentials")
-
-consumer_key = creds["consumer_key"]
-consumer_secret = creds["consumer_secret"]
-access_token = creds["access_token"]
-access_token_secret = creds["access_secret"]
-
-api = twitter.Api(consumer_key=consumer_key,
-                  consumer_secret=consumer_secret,
-                  access_token_key=access_token,
-                  access_token_secret=access_token_secret)
-
+api = twitter.Api(consumer_key=conf.consumer_key,
+                  consumer_secret=conf.consumer_secret,
+                  access_token_key=conf.access_token,
+                  access_token_secret=conf.access_token_secret,
+                  tweet_mode="extended")
 
 all_tweets = []
 
@@ -83,7 +62,6 @@ for j_tweet in jdb["tweets"]:
     all_tweets.append(tweet)
 
 threads = create_threads(all_tweets)
-
 
 # Users Database file (JSON)
 try:
@@ -100,12 +78,12 @@ def get_user_data(screen_name):
         logging.debug("Looking up profile info for user: {}".format(screen_name))
         try:
             user = api.GetUser(screen_name=screen_name, include_entities=True)
-        except TwitterError:
-            default = settings.get("default_user_image")
+        except twitter.error.TwitterError:
+            default = conf.settings.get("default_user_image")
             user = twitter.User(screen_name=screen_name, profile_image_url=default)
         profile_picture = "profile/{}.jpg".format(screen_name)
 
-        path = os.path.join(profile_path, "{}.jpg".format(screen_name))
+        path = os.path.join(conf.profile_path, "{}.jpg".format(screen_name))
         if not os.path.exists(path):
             urllib.request.urlretrieve(user.profile_image_url, path)
         user_dict[screen_name] = {}
@@ -115,15 +93,15 @@ def get_user_data(screen_name):
     return user_dict[screen_name]
 
 
-tex_file = os.path.join(save_path, "tweets.tex")
-shutil.copyfile(os.path.join("resources", "header.tex"), tex_file)
+tex_file = os.path.join(conf.save_path, "tweets.tex")
+shutil.copyfile(os.path.join("twitter_saver", "resources", "header.tex"), tex_file)
 
 
 def calculate_margins(tweet):
     text_margin = 0.7 + 0.5 * math.floor(len(tweet.text) / 82)
     picture_margin = []
     for img in tweet.media:
-        file_path = os.path.join(media_path, img.filename)
+        file_path = os.path.join(conf.media_path, img.filename)
         if not os.path.exists(file_path):
             logging.warning("File {} not found in media path!".format(file_path))
         (width, height) = Image.open(file_path).size
@@ -133,7 +111,7 @@ def calculate_margins(tweet):
 
 
 with open(tex_file, "a") as f:
-    f.write(titleTeX.format(screenName=screen_name,
+    f.write(titleTeX.format(screenName=conf.screen_name,
                             fromDate=format_timestamp(threads[0][0].created_at),
                             toDate=format_timestamp(threads[-1][-1].created_at)))
     logging.info("Creating LaTeX file from threads")

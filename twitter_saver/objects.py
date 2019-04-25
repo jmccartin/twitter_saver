@@ -1,9 +1,16 @@
 import os
+import twitter
 from typing import List
 import urllib.request
 
 
 class TwitterObject:
+
+    def __init__(self, id: int):
+        self.id = id
+
+    def __eq__(self, other):
+        return self.id == other.id
 
     def from_dict(self, **entries) -> None:
         self.__dict__.update(entries)
@@ -30,11 +37,11 @@ class TwitterObject:
 
 class MediaItem(TwitterObject):
     def __init__(self,
-                 id: str,
+                 id: int,
                  url: str,
                  filename: str,
                  type: str):
-        super(MediaItem, self).__init__()
+        super(MediaItem, self).__init__(id)
         self.id = id
         self.url = url
         self.filename = filename
@@ -56,14 +63,14 @@ class MediaItem(TwitterObject):
 
 class Tweet(TwitterObject):
     def __init__(self,
-                 id: str = None,
+                 id: int = None,
                  created_at: str = None,
                  author: str = None,
                  in_reply_to: str = None,
                  in_reply_to_status_id: str = None,
                  text: str = None,
                  media: List[MediaItem] = None):
-        super(Tweet, self).__init__()
+        super(Tweet, self).__init__(id)
         self.id = id
         self.created_at = created_at
         self.author = author
@@ -128,12 +135,45 @@ class Tweet(TwitterObject):
 
 
 class User(TwitterObject):
-    def __init__(self, **kwargs):
-        self.param_defaults = {
-            'author': None,
-            'screen_name': None,
-            'profile_picture': None,
-        }
+    def __init__(self,
+                 id,
+                 author,
+                 screen_name,
+                 profile_picture):
+        super(TwitterObject, self).__init__(id)
+        self.author = author
+        self.screen_name = screen_name
+        self.profile_picture = profile_picture
 
-        for (param, default) in self.param_defaults.items():
-            setattr(self, param, kwargs.get(param, default))
+
+def parse_tweet(tweet: twitter.Status) -> Tweet:
+    """
+    Converts each tweet (Status object from python-twitter)
+    into a simplified format, while grabbing all media items
+    on the fly.
+    :param tweet: twitter.models.Status object
+    :return: Tweet object
+    """
+
+    media_list = []
+
+    if tweet.media is not None:
+        for media in tweet.media:
+            media_obj = MediaItem(id=media.id,
+                                  filename=media.media_url.split("/")[-1],
+                                  url=media.media_url,
+                                  type=media.type)
+            media_list.append(media_obj)
+
+    if tweet.full_text is None:
+        text = tweet.text
+    else:
+        text = tweet.full_text
+
+    return Tweet(id=tweet.id,
+                 created_at=str(tweet.created_at),
+                 author=tweet.user.screen_name,
+                 in_reply_to=tweet.in_reply_to_screen_name,
+                 in_reply_to_status_id=tweet.in_reply_to_status_id,
+                 text=text,
+                 media=media_list)

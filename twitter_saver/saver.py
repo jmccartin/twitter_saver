@@ -7,45 +7,11 @@ import logging
 import os
 import sys
 import twitter
-import yaml
 
-from twitter_saver.objects import MediaItem, Tweet
+from twitter_saver.configuration import Configuration
+from twitter_saver.objects import parse_tweet
 
 logging.basicConfig(level=logging.INFO)
-
-
-def parse_tweet(tweet: twitter.Status) -> Tweet:
-    """
-    Converts each tweet (Status object from python-twitter)
-    into a simplified format, while grabbing all media items
-    on the fly.
-    :param tweet: twitter.models.Status object
-    :return: Tweet object
-    """
-
-    media_list = []
-
-    if settings["download_media"] and tweet.media is not None:
-        for media in tweet.media:
-            media_obj = MediaItem(id=media.id,
-                                  filename=media.media_url.split("/")[-1],
-                                  url=media.media_url,
-                                  type=media.type)
-            media_obj.get_media(media_path)
-            media_list.append(media_obj)
-
-    if tweet.full_text is None:
-        text = tweet.text
-    else:
-        text = tweet.full_text
-
-    return Tweet(id=tweet.id,
-                 created_at=str(tweet.created_at),
-                 author=tweet.user.screen_name,
-                 in_reply_to=tweet.in_reply_to_screen_name,
-                 in_reply_to_status_id=tweet.in_reply_to_status_id,
-                 text=text,
-                 media=media_list)
 
 
 if __name__ == "__main__":
@@ -60,37 +26,16 @@ if __name__ == "__main__":
 
     yaml_conf = os.path.join(args.configuration, "configuration.yml")
 
-    with open(yaml_conf, "r") as f:
-        conf = yaml.load(f)
-        if args.verbose:
-            print(yaml.dump(conf, default_flow_style=False))
+    conf = Configuration(yaml_conf)
 
-    settings = conf.get("general")
-    screen_name = settings["screen_name"]
-    max_tweets = settings["max_tweets"]
-    save_path = os.path.join(settings.get("save_path"), screen_name)
+    logging.info("Grabbing all new tweets for user: {}".format(conf.screen_name))
 
-    logging.info("Grabbing all new tweets for user: {}".format(screen_name))
+    db_file = os.path.join(conf.save_path, "tweets-db.json")
 
-    media_path = os.path.join(save_path, "media")
-    if not os.path.exists(media_path):
-        logging.info("path: {} does not exist, creating...".format(media_path))
-        os.makedirs(media_path)
-
-    db_file = os.path.join(save_path, "db-{}.json".format(screen_name))
-
-    # Load credentials from json file
-    credentials = conf.get("credentials")
-
-    consumer_key = credentials["consumer_key"]
-    consumer_secret = credentials["consumer_secret"]
-    access_token = credentials["access_token"]
-    access_token_secret = credentials["access_secret"]
-
-    api = twitter.Api(consumer_key=consumer_key,
-                      consumer_secret=consumer_secret,
-                      access_token_key=access_token,
-                      access_token_secret=access_token_secret,
+    api = twitter.Api(consumer_key=conf.consumer_key,
+                      consumer_secret=conf.consumer_secret,
+                      access_token_key=conf.access_token,
+                      access_token_secret=conf.access_token_secret,
                       tweet_mode="extended")
 
     # Database file (JSON)
@@ -107,9 +52,9 @@ if __name__ == "__main__":
 
     logging.info("Getting primary feed")
 
-    feed = api.GetUserTimeline(screen_name=screen_name,
+    feed = api.GetUserTimeline(screen_name=conf.screen_name,
                                since_id=last_found_tweet,
-                               count=max_tweets,
+                               count=conf.max_tweets,
                                include_rts=False)
 
     if len(feed) == 0:
@@ -123,7 +68,7 @@ if __name__ == "__main__":
     reply_ids = []
     parsed_ids = []
 
-    logging.info("Parsing tweets and saving media.")
+    logging.info("Parsing tweets.")
     for tweet in feed:
         new_tweets.append(parse_tweet(tweet))
         reply_ids.append(tweet.in_reply_to_status_id)
@@ -141,6 +86,11 @@ if __name__ == "__main__":
         logging.info("Found {} upstream tweets.".format(len(feed)))
         for tweet in feed:
             new_tweets.append(parse_tweet(tweet))
+
+    logging.info("Downloading all media items")
+    for tweet in new_tweets:
+        for media in tweet.media:
+            media.get_media(conf.media_path)
 
     sorted_tweets = sorted(new_tweets, key=lambda x: x.id, reverse=True)
     json_tweets = [tweet.to_dict() for tweet in sorted_tweets]
