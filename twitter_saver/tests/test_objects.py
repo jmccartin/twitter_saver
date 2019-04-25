@@ -1,30 +1,28 @@
-from twitter_saver.objects import Tweet
+from twitter import Status
+from twitter_saver.objects import parse_tweet
 
-media_json = {
-    "id": 1,
-    "url": "http://google.com",
-    "filename": "test.jpg",
-    "type": "photo"
-}
-
-tweet_json = {
-    "id": 1,
-    "created_at": "Thu Mar 28 00:00:00 +0000 2019",
-    "in_reply_to": "God",
-    "in_reply_to_status_id": 0,
-    "text": "Hello, World!",
-    "media": [media_json]
-}
+import pytest
 
 
-def test_tweet():
-    """
-    Tests to see if a Tweet class can be initialised from a json/dict
-    object, and if the same object can be returned using the inbuilt
-    methods.
-    """
+def test_parse_tweets():
+    media_json = {
+        "id": 1,
+        "filename": "a.jpg",
+        "media_url": "https://domain/a.jpg",
+        "type": "photo"
+    }
 
-    tweet = Tweet().new_from_json(tweet_json)
+    tweet_json = {
+        "id": 1,
+        "user": {"id": 1, "screen_name": "nobody"},
+        "in_reply_to": "someone else",
+        "in_reply_to_status_id": 0,
+        "text": "Hello, World!",
+        "entities": {"media": [media_json]}
+    }
 
-    assert tweet.to_dict().pop("_json") == tweet_json,\
-        "The json tweet did not equal the output of the Tweet class"
+    status = Status().NewFromJsonDict(tweet_json)
+    tweet = parse_tweet(status)
+
+    assert tweet.id == 1, "The parsed tweet's ID did not match what was expected!"
+    assert tweet.media[0].filename == "a.jpg", "The expected filename was not correct!"

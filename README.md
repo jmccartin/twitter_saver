@@ -9,7 +9,7 @@ Grabs tweets for a given user ID and collates threaded conversations into an off
   
 ## Requirements  
 **For saving conversations:** 
-- Any Python 3.4+ distribution (due to type hinting)
+- Any Python 3.5+ distribution
  
 **For publishing conversations:**  
 - A working LaTeX distribution (with XeLaTeX)  
@@ -31,7 +31,6 @@ the saved json database.
   
 ## Roadmap  
   
-- Better handling of branching threads
-- Unit tests (with codecov) 
+- More coverage of unit tests
 - A tider and dynamic view of saved tweets  
   - Perhaps using HTML/AngularJS?
