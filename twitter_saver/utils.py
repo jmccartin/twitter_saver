@@ -6,20 +6,25 @@ import twitter
 from twitter_saver.objects import MediaItem, Tweet
 
 
-def split_media(tweet: Tweet) -> List[Tweet]:
+def calc_day_diff(time1: str, time2: str) -> datetime.timedelta:
+    return create_timestamp(time1) - create_timestamp(time2)
+
+
+def clean_text(text: str) -> str:
     """
-    Splits a tweet based on the number of media.
-    This is for better LaTeX formatting, as more
-    than two pictures can often overrun the page
-    margins.
+    Removes unwanted characters from a tweet's fulltext
     """
-    split_tweets = []
-    tweet_dict = tweet.to_dict()
-    for media in tweet_dict["media"]:
-        tweet_dict["media"] = [media]
-        print(tweet_dict)
-        split_tweets.append(Tweet.new_from_json(tweet_dict))
-    return split_tweets
+    for char in ['&', '#', '_', '%', '$', '{', '}']:
+        text = str(text).replace(char, '\\{}'.format(char))
+    return str(text)
+
+
+def create_timestamp(time: str) -> datetime.datetime:
+    try:
+        my_date = datetime.datetime.strptime(time, '%Y-%m-%d %H:%M:%S')
+    except ValueError:
+        my_date = datetime.datetime.strptime(time, '%a %b %d %H:%M:%S %z %Y')
+    return my_date
 
 
 def create_threads(tweets: List[Tweet]) -> List[List[Tweet]]:
@@ -33,16 +38,6 @@ def create_threads(tweets: List[Tweet]) -> List[List[Tweet]]:
     split_media_bool = True
 
     tweets = sorted(tweets, key=lambda t: create_timestamp(t.created_at), reverse=False)
-
-    def fold_group(acc: List[List[Tweet]], tweet: Tweet) -> List[List[Tweet]]:
-        if acc == [[]]:
-            return [[tweet]]
-        else:
-            next_tweet = acc[-1][-1]
-            if next_tweet.id == tweet.in_reply_to_status_id:
-                return [*acc[:-1], [*acc[-1], tweet]]
-            else:
-                return [*acc, [tweet]]
 
     def add_to_thread(thread, replies):
         # Get all tweets less than a week older than the last tweet of the thread
@@ -65,6 +60,7 @@ def create_threads(tweets: List[Tweet]) -> List[List[Tweet]]:
 
         return thread
 
+    # Start with the true parents, the tweets not in reply to anyone
     parents = [[tweet] for tweet in tweets if tweet.in_reply_to_status_id is None]
     replies = [tweet for tweet in tweets if tweet.in_reply_to_status_id is not None]
 
@@ -75,37 +71,35 @@ def create_threads(tweets: List[Tweet]) -> List[List[Tweet]]:
     for thread in parents:
         threads.append(add_to_thread(thread, replies))
 
+    # Only redo threading for tweets not already in a thread
     tweets = [tweet for tweet in remainder if tweet.id not in tweet_set]
 
+    # For the threads that are made from branches of other threads
     parents = [[tweet] for tweet in tweets if tweet.in_reply_to_status_id in tweet_set]
     replies = [tweet for tweet in tweets if tweet.in_reply_to_status_id not in tweet_set]
 
     for thread in parents:
         threads.append(add_to_thread(thread, replies))
 
+    # Sort the threads by the parent's creation date
     return sorted(threads, key=lambda thread: create_timestamp(thread[0].created_at))
-
-
-def create_timestamp(time: str) -> datetime.datetime:
-    try:
-        my_date = datetime.datetime.strptime(time, '%Y-%m-%d %H:%M:%S')
-    except ValueError:
-        my_date = datetime.datetime.strptime(time, '%a %b %d %H:%M:%S %z %Y')
-    return my_date
 
 
 def format_timestamp(timestamp: str) -> str:
     return create_timestamp(timestamp).strftime("%b %d %Y")
 
 
-def calc_day_diff(time1: str, time2: str) -> datetime.timedelta:
-    return create_timestamp(time1) - create_timestamp(time2)
-
-
-def clean_text(text: str) -> str:
+def split_media(tweet: Tweet) -> List[Tweet]:
     """
-    Removes unwanted characters from a tweet's fulltext
+    Splits a tweet based on the number of media.
+    This is for better LaTeX formatting, as more
+    than two pictures can often overrun the page
+    margins.
     """
-    for char in ['&', '#', '_', '%', '$', '{', '}']:
-        text = str(text).replace(char, '\\{}'.format(char))
-    return str(text)
+    split_tweets = []
+    tweet_dict = tweet.to_dict()
+    for media in tweet_dict["media"]:
+        tweet_dict["media"] = [media]
+        print(tweet_dict)
+        split_tweets.append(Tweet.new_from_json(tweet_dict))
+    return split_tweets

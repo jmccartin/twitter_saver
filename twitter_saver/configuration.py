@@ -1,14 +1,11 @@
-import logging
 import os
 import yaml
-
-logging.basicConfig(level=logging.INFO)
 
 
 class Configuration:
     def __init__(self, config_file):
         with open(config_file, "r") as f:
-            conf = yaml.load(f)
+            conf = yaml.safe_load(f)
 
         self.settings = conf.get("general")
 

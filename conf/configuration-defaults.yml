@@ -1,7 +1,7 @@
 general:
   # Where to store the database, media files, and .tex documents
   save_path: .
-  screen_name: 'BarackObama'
+  screen_name: ''
   # The number of tweets to get since the last collected ID.
   max_tweets: 99
   # Verbosity of logging messages
