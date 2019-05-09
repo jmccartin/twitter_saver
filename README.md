@@ -32,5 +32,6 @@ the saved json database.
 ## Roadmap  
   
 - More coverage of unit tests
+- A stats tool to display info about collected tweets
 - A tider and dynamic view of saved tweets  
   - Perhaps using HTML/AngularJS?
