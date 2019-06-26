@@ -1,6 +1,12 @@
 import argparse
 import json
+import logging
 import os
+
+logging.basicConfig(level="INFO",
+                    format="%(asctime)s [%(levelname)s] %(message)s",
+                    datefmt='%Y-%m-%d %H:%M:%S'
+                    )
 
 
 def main(file1, file2, output):
@@ -14,12 +20,19 @@ def main(file1, file2, output):
         db_2 = jdb.get("tweets")
 
     # Union the two tweet databases
-    merged_tweets = db_1 + [tweet for tweet in db_2 if tweet not in db_1]
+    db_2_unique = [tweet for tweet in db_2 if tweet not in db_1]
+    merged_tweets = db_1 + db_2_unique
 
     jdb = {"tweets": list(merged_tweets)}
 
     with open(os.path.expanduser(output), "w") as f:
         json.dump(jdb, f)
+
+    filename1 = file1.split('\\')[-1]
+    filename2 = file2.split('\\')[-1]
+
+    logging.info(f"Merged {len(db_1)} tweets in {filename1} "
+                 f"with {len(db_2_unique)} unique tweets in {filename2}.")
 
 
 if __name__ == "__main__":
