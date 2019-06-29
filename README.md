@@ -9,7 +9,7 @@ Grabs tweets for a given user ID and collates threaded conversations into an off
   
 ## Requirements  
 **For saving conversations:** 
-- Any Python 3.5+ distribution
+- Any Python 3.6+ distribution
  
 **For publishing conversations:**  
 - A working LaTeX distribution (with XeLaTeX)  
