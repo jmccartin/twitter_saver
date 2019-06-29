@@ -13,18 +13,6 @@ def calc_day_diff(time1: str, time2: str) -> datetime.timedelta:
     return create_timestamp(time1) - create_timestamp(time2)
 
 
-def check_tweet_list(file, id):
-    with open(file, "r") as f:
-        db = json.load(f).get("tweets")
-        for tweet in db:
-            if tweet.get("id") == id:
-                print(f"Found tweet with id: {id}")
-                print(tweet)
-            if tweet.get("in_reply_to_status_id") == id:
-                print(f"Found reply with id: {id}")
-                print(tweet)
-
-
 def clean_text(text: str) -> str:
     """
     Removes unwanted characters from a tweet's fulltext
