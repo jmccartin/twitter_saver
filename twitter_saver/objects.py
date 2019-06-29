@@ -26,10 +26,10 @@ class TwitterObject:
         """
 
         json_data = data.copy()
+        json_data.pop("_json", None)
         if kwargs:
             for key, val in kwargs.items():
                 json_data[key] = val
-
         c = cls(**json_data)
         c._json = data
         return c

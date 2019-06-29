@@ -1,5 +1,8 @@
 import datetime
 from functools import reduce
+import json
+import logging
+from tqdm import tqdm
 from typing import List
 import twitter
 
@@ -8,6 +11,18 @@ from twitter_saver.objects import MediaItem, Tweet
 
 def calc_day_diff(time1: str, time2: str) -> datetime.timedelta:
     return create_timestamp(time1) - create_timestamp(time2)
+
+
+def check_tweet_list(file, id):
+    with open(file, "r") as f:
+        db = json.load(f).get("tweets")
+        for tweet in db:
+            if tweet.get("id") == id:
+                print(f"Found tweet with id: {id}")
+                print(tweet)
+            if tweet.get("in_reply_to_status_id") == id:
+                print(f"Found reply with id: {id}")
+                print(tweet)
 
 
 def clean_text(text: str) -> str:
@@ -37,13 +52,17 @@ def create_threads(tweets: List[Tweet]) -> List[List[Tweet]]:
     """
     split_media_bool = True
 
+    # Day period in which to look forward while filtering threads
+    window = 7
+
     tweets = sorted(tweets, key=lambda t: create_timestamp(t.created_at), reverse=False)
 
     def add_to_thread(thread, replies):
         # Get all tweets less than a week older than the last tweet of the thread
-        inside_window = filter(lambda tweet:
-                               calc_day_diff(tweet.created_at, thread[-1].created_at).days <= 7,
-                               replies)
+        inside_window = (
+            filter(lambda tweet:
+                   calc_day_diff(tweet.created_at, thread[-1].created_at).days <= window, replies)
+        )
 
         # Check if the tweets in the window are in the thread
         for tweet in inside_window:
@@ -68,7 +87,8 @@ def create_threads(tweets: List[Tweet]) -> List[List[Tweet]]:
     remainder = []
 
     threads = []
-    for thread in parents:
+    logging.info("Creating base threads")
+    for thread in tqdm(parents):
         threads.append(add_to_thread(thread, replies))
 
     # Only redo threading for tweets not already in a thread
@@ -78,7 +98,8 @@ def create_threads(tweets: List[Tweet]) -> List[List[Tweet]]:
     parents = [[tweet] for tweet in tweets if tweet.in_reply_to_status_id in tweet_set]
     replies = [tweet for tweet in tweets if tweet.in_reply_to_status_id not in tweet_set]
 
-    for thread in parents:
+    logging.info("Adding out-of-order replies to original threads")
+    for thread in tqdm(parents):
         threads.append(add_to_thread(thread, replies))
 
     # Sort the threads by the parent's creation date
@@ -100,6 +121,5 @@ def split_media(tweet: Tweet) -> List[Tweet]:
     tweet_dict = tweet.to_dict()
     for media in tweet_dict["media"]:
         tweet_dict["media"] = [media]
-        print(tweet_dict)
         split_tweets.append(Tweet.new_from_json(tweet_dict))
     return split_tweets

@@ -28,8 +28,8 @@ def main(file1, file2, output):
     with open(os.path.expanduser(output), "w") as f:
         json.dump(jdb, f)
 
-    filename1 = file1.split('\\')[-1]
-    filename2 = file2.split('\\')[-1]
+    filename1 = str(file1).split('\\')[-1]
+    filename2 = str(file2).split('\\')[-1]
 
     logging.info(f"Merged {len(db_1)} tweets in {filename1} "
                  f"with {len(db_2_unique)} unique tweets in {filename2}.")
