@@ -65,7 +65,7 @@ for j_tweet in jdb["tweets"]:
     tweet = Tweet.new_from_json(j_tweet)
     all_tweets.append(tweet)
 
-threads = create_threads(all_tweets[:100])
+threads = create_threads(all_tweets)
 
 # Users Database file (JSON)
 try:
