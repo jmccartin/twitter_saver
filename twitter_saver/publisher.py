@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
 import argparse
 import json
 import logging
@@ -8,7 +5,6 @@ import math
 import os
 from PIL import Image
 import shutil
-from tqdm import tqdm
 import twitter
 import urllib.request
 
@@ -17,16 +13,23 @@ from twitter_saver.latex_functions import *
 from twitter_saver.objects import Tweet
 from twitter_saver.utils import create_threads, format_timestamp, clean_text
 
-logging.basicConfig(level=logging.INFO)
-
 parser = argparse.ArgumentParser()
 parser.add_argument("--configuration", "-c", help="the path to the config folder", type=str)
-parser.add_argument("--verbose", "-v", help="enable verbose logging", type=bool, default=False)
+parser.add_argument("--log", "-l", help="set the logging level", type=str, default="INFO")
 
 args = parser.parse_args()
 if args.configuration is None:
     print(parser.format_help())
     raise FileNotFoundError("You have not specified a configuration path")
+
+numeric_level = getattr(logging, args.log.upper(), None)
+if not isinstance(numeric_level, int):
+    raise ValueError("Invalid log level: {}".format(args.log))
+
+logging.basicConfig(level=numeric_level,
+                    format="%(asctime)s [%(levelname)s] %(message)s",
+                    datefmt='%Y-%m-%d %H:%M:%S'
+                    )
 
 yaml_conf = os.path.join(args.configuration, "configuration.yml")
 
@@ -45,6 +48,7 @@ if not os.path.exists(os.path.join(conf.media_path, "twitter_logo.png")):
 try:
     with open(db_file, "r") as f:
         jdb = json.load(f)
+        logging.info("Loaded tweet database")
 except FileNotFoundError:
     logging.error("Database not found!")
     raise
@@ -115,7 +119,10 @@ with open(tex_file, "a") as f:
                             fromDate=format_timestamp(threads[0][0].created_at),
                             toDate=format_timestamp(threads[-1][-1].created_at)))
     logging.info("Creating LaTeX file from threads")
-    for thread in tqdm(threads):
+    for thread in threads:
+        if "Mechanical" in thread[0].text:
+            print(thread[0])
+            print([t.id for t in thread])
         f.write("% ---------------- THREAD ---------------\n")
         for i, tweet in enumerate(thread):
             # Don"t print a thread line for last tweet
